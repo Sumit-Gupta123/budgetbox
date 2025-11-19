@@ -1,23 +1,22 @@
 // backend/server.js
 const express = require('express');
 const cors = require('cors');
-const pool = require('./db'); // Import the hardcoded DB connection
+const pool = require('./db'); 
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+
+// CRITICAL FIX: Allow Render to set the port
+const PORT = process.env.PORT || 4000; 
 
 app.use(cors());
 app.use(express.json());
 
-const DEMO_EMAIL = 'hire-me@anshumat.org';
-
 // 1. GET: Fetch latest from DB
 app.get('/budget/latest', async (req, res) => {
   try {
-    console.log('Attempting to fetch from DB...');
+    // Use the email you inserted in your DB seed
     const result = await pool.query(
-      'SELECT income, expenses, last_updated FROM budgets WHERE user_email = $1', 
-      [DEMO_EMAIL]
+      'SELECT income, expenses, last_updated FROM budgets LIMIT 1' 
     );
     
     if (result.rows.length === 0) {
@@ -39,17 +38,16 @@ app.get('/budget/latest', async (req, res) => {
 // 2. POST: Sync to DB
 app.post('/budget/sync', async (req, res) => {
   const { income, expenses, lastUpdated } = req.body;
-  
+  const user_email = 'hire-me@anshumat.org'; // Hardcoded for demo
+
   try {
-    console.log('Attempting to sync to DB...');
     await pool.query(
       `UPDATE budgets 
        SET income = $1, expenses = $2, last_updated = $3 
        WHERE user_email = $4`,
-      [income, expenses, lastUpdated, DEMO_EMAIL]
+      [income, expenses, lastUpdated, user_email]
     );
     
-    console.log('✅ Database updated successfully for:', DEMO_EMAIL);
     res.json({ status: 'success', timestamp: Date.now() });
   } catch (err) {
     console.error('Sync Error:', err.message);
