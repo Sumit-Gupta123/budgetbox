@@ -4,7 +4,7 @@ const cors = require('cors');
 const pool = require('./db'); // Import the hardcoded DB connection
 
 const app = express();
-const PORT = 4000; // Hardcoded port
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
@@ -58,5 +58,5 @@ app.post('/budget/sync', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend running on http://localhost:${PORT}`);
+  console.log(`✅ Backend running on port ${PORT}`);
 });
