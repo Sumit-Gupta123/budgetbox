@@ -1,4 +1,3 @@
-// src/store/useBudgetStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { BudgetStore } from '@/types/budget';
@@ -40,30 +39,39 @@ export const useBudgetStore = create<BudgetStoreWithActions>()(
 
       setSyncStatus: (status) => set({ syncStatus: status }),
 
-      // NEW: Sync Logic
+      // CORRECTED SYNC LOGIC
       syncData: async () => {
         const state = get();
         
+        // 1. Get the URL from Vercel Environment, or fallback to localhost
+        // We also remove any trailing slash just in case to prevent errors
+        const envUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+        const API_URL = envUrl || 'http://localhost:4000';
+        
         try {
-          set({ syncStatus: 'pending' }); // Show spinner state if you had one
+          set({ syncStatus: 'pending' });
 
-          // 1. Prepare payload (exclude functions)
+          // 2. Prepare payload
           const payload = {
             income: state.income,
             expenses: state.expenses,
             lastUpdated: state.lastUpdated
           };
 
-          // 2. Send to Backend
-          const response = await fetch('http://localhost:4000/budget/sync', {
+          console.log(`Attempting sync to: ${API_URL}/budget/sync`);
+
+          // 3. Send to Backend
+          const response = await fetch(`${API_URL}/budget/sync`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
 
-          if (!response.ok) throw new Error('Sync failed');
+          if (!response.ok) {
+            throw new Error(`Server responded with ${response.status}`);
+          }
 
-          // 3. On Success
+          // 4. On Success
           const data = await response.json();
           console.log('Synced successfully:', data);
           set({ syncStatus: 'synced' });
@@ -72,7 +80,6 @@ export const useBudgetStore = create<BudgetStoreWithActions>()(
           console.error('Sync error:', error);
           // Keep status as pending so user knows it failed
           set({ syncStatus: 'pending' }); 
-          alert('Sync failed! Is the backend running?');
         }
       },
     }),
