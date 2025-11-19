@@ -1,12 +1,12 @@
 // backend/db.js
 const { Pool } = require('pg');
-require('dotenv').config(); // We will assume .env works for the repo structure
 
-// USE THIS FOR GITHUB (Don't show your real password)
+// If running locally, you might need to temporarily hardcode it for testing, 
+// BUT for Render, we MUST use process.env.DATABASE_URL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // Back to using env variable
+  connectionString: process.env.DATABASE_URL, 
   ssl: {
-    rejectUnauthorized: false,
+    rejectUnauthorized: false, // Required for Supabase/Neon
   },
 });
 
